@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Logical Calculator — Truth Table (8 Variables)</title>
+  <style>
+    :root{
+      --bg:#f7fafc;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --accent-hover:#1d4ed8;
+      --success:#10b981;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+      --border:#000000;
+      font-family: 'Segoe UI', Trebuchet MS, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      color-scheme: light;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#033bf1 0%,var(--bg) 100%);
+      padding:28px;
+      color:#111827;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .calculator-card{
+      max-width:1400px;
+      margin:0 auto;
+      background:var(--card);
+      padding:32px;
+      border-radius:16px;
+      box-shadow: 0 20px 60px rgba(15,23,42,0.12);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .members-card{
+      max-width:1400px;
+      margin:0 auto;
+    }
+
+    @keyframes fadeIn{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    h1{
+      margin:0 0 24px 0;
+      font-size:28px;
+      font-weight:700;
+      background:linear-gradient(135deg,#000000 0%,#fd0000 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:16px;
+      margin-bottom:24px;
+      padding:20px;
+      background:linear-gradient(135deg,#2385e7 0%,#c0b7b7 100%);
+      border-radius:12px;
+      border:1px solid var(--border);
+    }
+
+    .controls label{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      background:var(--card);
+      padding:12px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      font-size:13px;
+      font-weight:600;
+      color:#374151;
+      transition:all 0.3s ease;
+    }
+
+    .controls label:hover{
+      border-color:var(--accent);
+      box-shadow:0 4px 12px rgba(7, 7, 7, 0.705);
+    }
+
+    .controls select, .controls input{
+      padding:10px 12px;
+      border-radius:8px;
+      border:2px solid var(--border);
+      font-size:14px;
+      font-weight:500;
+      background:white;
+      color:#11161d;
+      transition:all 0.3s ease;
+      cursor:pointer;
+    }
+
+    .controls select:hover, .controls input:hover{
+      border-color:var(--accent);
+    }
+
+    .controls select:focus, .controls input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    .controls button{
+      background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);
+      color:white;
+      border:none;
+      padding:12px 24px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      transition:all 0.3s ease;
+      box-shadow:0 4px 12px rgba(37,99,235,0.2);
+      grid-column:auto;
+      height:fit-content;
+      align-self:flex-end;
+    }
+
+    .controls button:hover{
+      background:linear-gradient(135deg,var(--accent-hover) 0%,#6d28d9 100%);
+      transform:translateY(-2px);
+      box-shadow:0 6px 20px rgba(37,99,235,0.3);
+    }
+
+    .controls button:active{
+      transform:translateY(0);
+    }
+
+    .controls button[title]{
+      background:linear-gradient(135deg,var(--muted) 0%,#4b5563 100%);
+      box-shadow:0 4px 12px rgba(5, 5, 5, 0.2);
+    }
+
+    .controls button[title]:hover{
+      background:linear-gradient(135deg,#4b5563 0%,#374151 100%);
+    }
+
+    .hidden{display:none}
+
+    .info{
+      margin:16px 0 24px;
+      padding:16px;
+      background:linear-gradient(135deg,#dbeafe 0%,#e0e7ff 100%);
+      color:#1e40af;
+      font-size:13px;
+      border-radius:8px;
+      border-left:4px solid var(--accent);
+      line-height:1.6;
+    }
+
+    .info p{margin:0}
+
+    .var-count-info{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:600;
+      margin-top:8px;
+      padding:8px 12px;
+      background:rgba(37,99,235,0.05);
+      border-radius:6px;
+      text-align:center;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border-radius:12px;
+      border:1px solid var(--border);
+      box-shadow:0 4px 12px rgba(0,0,0,0.05);
+      max-height:700px;
+      background:white;
+    }
+
+    table{
+      border-collapse:collapse;
+      width:100%;
+      min-width:480px;
+    }
+
+    th,td{
+      padding:14px 12px;
+      border-bottom:1px solid var(--border);
+      text-align:center;
+      font-family:'Courier New',monospace;
+      font-size:13px;
+      font-weight:500;
+    }
+
+    th{
+      font-weight:700;
+      font-size:14px;
+    }
+
+    thead th{
+      background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);
+      position:sticky;
+      top:0;
+      z-index:10;
+      border-bottom:2px solid var(--accent);
+      color:#1f2937;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+
+    tbody tr{
+      transition:all 0.2s ease;
+    }
+
+    tbody tr:hover{
+      background:linear-gradient(90deg,rgba(37,99,235,0.04) 0%,rgba(124,58,237,0.04) 100%);
+    }
+
+    tbody tr:nth-child(even){
+      background:#fafafa;
+    }
+
+    tbody tr:nth-child(even):hover{
+      background:linear-gradient(90deg,rgba(37,99,235,0.06) 0%,rgba(124,58,237,0.06) 100%);
+    }
+
+    .result-true{
+      background:linear-gradient(90deg,rgba(16,185,129,0.15) 0%,rgba(16,185,129,0.05) 100%);
+      color:#047857;
+      font-weight:700;
+      border-radius:6px;
+      padding:12px !important;
+      border:2px solid rgba(16,185,129,0.3);
+    }
+
+    .result-false{
+      background:linear-gradient(90deg,rgba(239,68,68,0.15) 0%,rgba(239,68,68,0.05) 100%);
+      color:#991b1b;
+      font-weight:700;
+      border-radius:6px;
+      padding:12px !important;
+      border:2px solid rgba(239,68,68,0.3);
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      padding:20px;
+      text-align:center;
+    }
+
+    @media (max-width:768px){
+      .calculator-card{
+        padding:20px;
+      }
+
+      h1{
+        font-size:22px;
+      }
+
+      .controls{
+        grid-template-columns:1fr;
+        gap:12px;
+        padding:16px;
+      }
+
+      .controls button{
+        width:100%;
+      }
+
+      th,td{
+        padding:10px 8px;
+        font-size:12px;
+      }
+
+      .table-wrap{
+        max-height:500px;
+      }
+    }
+
+    @media (max-width:480px){
+      .calculator-card{
+        padding:16px;
+      }
+
+      h1{
+        font-size:18px;
+        margin-bottom:16px;
+      }
+
+      .controls{
+        gap:8px;
+        padding:12px;
+      }
+
+      th,td{
+        padding:8px 6px;
+        font-size:11px;
+      }
+
+      .info{
+        font-size:12px;
+        padding:12px;
+      }
+    }
+
+    nav{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      background:linear-gradient(135deg,#0a0e27 0%,#1a1a3e 100%);
+      backdrop-filter:blur(10px);
+      padding:16px 28px;
+      z-index:100;
+      box-shadow:0 4px 20px rgba(0,0,0,0.2);
+      border-bottom:2px solid rgba(37,99,235,0.3);
+    }
+
+    .nav-container{
+      max-width:1400px;
+      margin:0 auto;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+    }
+
+    .nav-brand{
+      font-weight:700;
+      font-size:18px;
+      background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    .nav-links{
+      display:flex;
+      gap:24px;
+      list-style:none;
+      margin:0;
+      padding:0;
+    }
+
+    .nav-links a{
+      color:white;
+      text-decoration:none;
+      font-weight:600;
+      font-size:14px;
+      padding:8px 16px;
+      border-radius:6px;
+      transition:all 0.3s ease;
+      border:2px solid transparent;
+    }
+
+    .nav-links a:hover{
+      background:rgba(37,99,235,0.2);
+      border-color:rgba(37,99,235,0.5);
+      color:#60a5fa;
+    }
+
+    .nav-links a.active{
+      background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);
+      border-color:#7c3aed;
+      color:white;
+    }
+
+    body{
+      padding-top:80px !important;
+    }
+
+    /* Calculator Section */
+    .calculator-section{
+      min-height:calc(100vh - 80px);
+      padding:80px 40px;
+      background:linear-gradient(180deg,#033bf1 0%,var(--bg) 100%);
+    }
+
+    /* GROUP Members Section */
+    .members-section{
+      min-height:calc(100vh - 80px);
+      padding:80px 40px;
+      background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+    }
+
+    .members-section h1{
+      text-align:center;
+      color:#1f2937;
+      margin-bottom:50px;
+      font-size:32px;
+      background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    .members-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+      gap:30px;
+      max-width:1000px;
+      margin:0 auto;
+    }
+
+    .member-card{
+      background:white;
+      border-radius:12px;
+      padding:30px 20px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.08);
+      transition:all 0.3s ease;
+      border:2px solid transparent;
+      text-align:center;
+    }
+
+    .member-card:hover{
+      transform:translateY(-8px);
+      box-shadow:0 8px 30px rgba(37,99,235,0.15);
+      border-color:#2563eb;
+    }
+
+    .member-name{
+      font-size:20px;
+      font-weight:700;
+      color:#1f2937;
+      margin-bottom:8px;
+    }
+
+    .member-role{
+      font-size:14px;
+      color:#6b7280;
+      font-weight:500;
+    }
+
+    @media (max-width:768px){
+      .calculator-section{
+        padding:60px 20px;
+      }
+
+      .calculator-card{
+        padding:20px;
+      }
+
+      .members-section{
+        padding:60px 20px;
+      }
+
+      .members-section h1{
+        font-size:24px;
+        margin-bottom:30px;
+      }
+
+      .members-grid{
+        grid-template-columns:1fr;
+        gap:20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="nav-brand">Logic Calculator</div>
+      <ul class="nav-links">
+        <li><a href="#calculator" class="active">Calculator</a></li>
+        <li><a href="#members">GROUP Members</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <section id="calculator" class="calculator-section">
+    <div class="calculator-card">
+      <h1>Logical Calculator — Truth Table (Up to 8 Variables)</h1>
+      <section class="controls">
+        <label>
+          Variables:
+          <select id="varCount">
+            <option value="2" selected>2 (P, Q)</option>
+            <option value="3">3 (P, Q, R)</option>
+            <option value="4">4 (P, Q, R, S)</option>
+            <option value="5">5 (P, Q, R, S, T)</option>
+            <option value="6">6 (P, Q, R, S, T, U)</option>
+            <option value="7">7 (P, Q, R, S, T, U, V)</option>
+            <option value="8">8 (P, Q, R, S, T, U, V, W)</option>
+          </select>
+        </label>
+
+        <label>
+          Operator:
+          <select id="operator">
+            <option value="AND" selected>AND (∧)</option>
+            <option value="OR">OR (∨)</option>
+            <option value="XOR">XOR (⊕)</option>
+            <option value="NAND">NAND</option>
+            <option value="NOR">NOR</option>
+            <option value="XNOR">XNOR</option>
+            <option value="IMPLIES">IMPLIES (→)</option>
+            <option value="EQUIV">EQUIV (↔)</option>
+            <option value="CUSTOM">Custom expression</option>
+          </select>
+        </label>
+
+        <label id="customLabel" class="hidden">
+          Expression:
+          <input id="customExpr" placeholder="e.g. !(A && B) || C or A -> (B || C)" />
+        </label>
+
+        <button id="generate">Generate Table</button>
+        <button id="copyCsv" title="Copy table (CSV) to clipboard">Copy CSV</button>
+        <div class="var-count-info" id="rowInfo"></div>
+      </section>
+
+      <section class="info">
+        <p>Custom expression supports variables P-W and operators: !, AND/OR/NOT, &&, ||, ^ (XOR), -> (implies), &lt;-&gt; (equiv). Use parentheses for grouping.</p>
+      </section>
+
+      <section id="tableWrap" class="table-wrap">
+        <!-- Table inserted here -->
+      </section>
+    </div>
+  </section>
+
+  <section id="members" class="members-section">
+    <div class="members-card">
+      <h1>GROUP Members</h1>
+      <div class="members-grid">
+        <div class="member-card">
+          <div class="member-name">John Bien</div>
+          <div class="member-role">Group Member</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Logical Calculator — truth table generator
+    // Supports 2-8 variables and custom expressions using P-W
+
+    const varCountEl = document.getElementById('varCount');
+    const operatorEl = document.getElementById('operator');
+    const customLabel = document.getElementById('customLabel');
+    const customExprEl = document.getElementById('customExpr');
+    const generateBtn = document.getElementById('generate');
+    const tableWrap = document.getElementById('tableWrap');
+    const copyCsvBtn = document.getElementById('copyCsv');
+    const rowInfo = document.getElementById('rowInfo');
+
+    operatorEl.addEventListener('change', () => {
+      customLabel.classList.toggle('hidden', operatorEl.value !== 'CUSTOM');
+    });
+
+    generateBtn.addEventListener('click', generateTable);
+    copyCsvBtn.addEventListener('click', copyCsv);
+
+    // Helper boolean functions
+    function xor(a,b){ return !!a !== !!b; }
+    function impl(a,b){ return (!a) || b; }
+    function equiv(a,b){ return !!a === !!b; }
+    function nand(a,b){ return !(a && b); }
+    function nor(a,b){ return !(a || b); }
+    function xnor(a,b){ return !(!!a !== !!b); }
+
+    // Get variable names P-W
+    function getVariableNames(count) {
+      return Array.from({length: count}, (_, i) => String.fromCharCode(80 + i));
+    }
+
+    // Evaluate a preselected operator for values object
+    function evalOperator(op, vals, varCount){
+      const vars = getVariableNames(varCount).map(v => !!vals[v]);
+      
+      switch(op){
+        case 'AND': return vars.every(v => v);
+        case 'OR': return vars.some(v => v);
+        case 'XOR': return vars.reduce((a,b) => xor(a,b), false);
+        case 'NAND': return !(vars.every(v => v));
+        case 'NOR': return !(vars.some(v => v));
+        case 'XNOR': return equiv(vars.reduce((a,b) => xor(a,b), false), false);
+        case 'IMPLIES': return vars.slice(0, -1).reduce((a,b) => impl(a,b), vars[0]);
+        case 'EQUIV': return vars.slice(0, -1).every((v,i,arr) => equiv(v, arr[i+1]));
+        default: return false;
+      }
+    }
+
+    // Build a safe evaluator for custom expressions
+    function buildCustomEvaluator(rawExpr, varCount){
+      if(!rawExpr || !rawExpr.trim()) return null;
+      const vars = getVariableNames(varCount);
+      
+      let js = rawExpr
+        // named operators
+        .replace(/\bAND\b/gi,'&&')
+        .replace(/\bOR\b/gi,'||')
+        .replace(/\bNOT\b/gi,'!')
+        // implication and equivalence
+        .replace(/<->/g,' equiv ')
+        .replace(/->/g,' impl ')
+        // xor symbol
+        .replace(/\^/g,' xor ')
+        .replace(/\s+/g,' ')
+        .trim();
+
+      return (vals) => {
+        try{
+          const varArgs = vars.map(v => !!vals[v]);
+          const fn = Function(...vars, 'xor','impl','equiv','return !!(' + js + ')');
+          return fn(...varArgs, xor, impl, equiv);
+        }catch(e){
+          console.error('Expression eval error', e);
+          return 'ERR';
+        }
+      };
+    }
+
+    function generateTable(){
+      const n = Number(varCountEl.value);
+      const op = operatorEl.value;
+      const varNames = getVariableNames(n);
+      const rowCount = 1 << n;
+      
+      rowInfo.textContent = `Generating ${rowCount} rows (2^${n})...`;
+      
+      let evaluator = null;
+      if(op === 'CUSTOM'){
+        const expr = customExprEl.value;
+        evaluator = buildCustomEvaluator(expr, n);
+        if(!evaluator){
+          tableWrap.innerHTML = `<div class="small">Enter a custom expression and press Generate.</div>`;
+          return;
+        }
+      }
+
+      const rows = [];
+      for(let i = 0; i < rowCount; i++){
+        const vals = {};
+        for(let j = 0; j < n; j++){
+          vals[varNames[j]] = !!(i & (1 << (n-1-j)));
+        }
+        
+        let result;
+        if(op === 'CUSTOM'){
+          result = evaluator(vals);
+        } else {
+          result = evalOperator(op, vals, n);
+        }
+        rows.push({vals, result});
+      }
+
+      renderTable(rows, varNames, op);
+      rowInfo.textContent = `Showing ${rowCount} rows`;
+    }
+
+    function renderTable(rows, varNames, op){
+      let thead = `<tr>${varNames.map(v => `<th>${v}</th>`).join('')}<th>Result</th></tr>`;
+      let tbody = rows.map(r => {
+        const resClass = r.result === true ? 'result-true' : (r.result === false ? 'result-false' : 'small');
+        const resText = (r.result === true || r.result === false) ? (r.result ? 'T' : 'F') : String(r.result);
+        const cells = varNames.map(v => `<td>${r.vals[v] ? 'T' : 'F'}</td>`).join('');
+        return `<tr>${cells}<td class="${resClass}">${resText}</td></tr>`;
+      }).join('\n');
+
+      tableWrap.innerHTML = `<table>
+        <thead>${thead}</thead>
+        <tbody>${tbody}</tbody>
+      </table>`;
+    }
+
+    // Copy CSV of current table to clipboard
+    async function copyCsv(){
+      const tbl = tableWrap.querySelector('table');
+      if(!tbl){ alert('Generate a table first'); return; }
+      const rows = Array.from(tbl.querySelectorAll('tr')).map(tr => {
+        return Array.from(tr.querySelectorAll('th,td')).map(cell => cell.innerText.trim()).join(',');
+      }).join('\n');
+      try{
+        await navigator.clipboard.writeText(rows);
+        copyCsvBtn.textContent = 'Copied!';
+        setTimeout(()=> copyCsvBtn.textContent = 'Copy CSV', 1500);
+      }catch(e){
+        alert('Copy failed: ' + e);
+      }
+    }
+
+    // Generate initial table on load
+    generateTable();
+  </script>
